@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20231108154749 extends AbstractMigration
+final class Version20231110090315 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -22,6 +22,8 @@ final class Version20231108154749 extends AbstractMigration
         // this up() migration is auto-generated, please modify it to your needs
         $this->addSql('CREATE SEQUENCE friend_request_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
         $this->addSql('CREATE SEQUENCE private_chat_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
+        $this->addSql('CREATE SEQUENCE private_conversation_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
+        $this->addSql('CREATE SEQUENCE private_message_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
         $this->addSql('CREATE SEQUENCE profile_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
         $this->addSql('CREATE SEQUENCE relation_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
         $this->addSql('CREATE SEQUENCE "user_id_seq" INCREMENT BY 1 MINVALUE 1 START 1');
@@ -30,12 +32,17 @@ final class Version20231108154749 extends AbstractMigration
         $this->addSql('CREATE INDEX IDX_F284D946F8DDD17 ON friend_request (received_by_id)');
         $this->addSql('COMMENT ON COLUMN friend_request.created_at IS \'(DC2Type:datetime_immutable)\'');
         $this->addSql('CREATE TABLE private_chat (id INT NOT NULL, PRIMARY KEY(id))');
+        $this->addSql('CREATE TABLE private_conversation (id INT NOT NULL, conv_creator_id INT NOT NULL, conv_recipient_id INT NOT NULL, PRIMARY KEY(id))');
+        $this->addSql('CREATE INDEX IDX_DCF38EEB855AA6A ON private_conversation (conv_creator_id)');
+        $this->addSql('CREATE INDEX IDX_DCF38EEB5FDB19BC ON private_conversation (conv_recipient_id)');
+        $this->addSql('CREATE TABLE private_message (id INT NOT NULL, private_conversation_id INT NOT NULL, PRIMARY KEY(id))');
+        $this->addSql('CREATE INDEX IDX_4744FC9B4242ECCE ON private_message (private_conversation_id)');
         $this->addSql('CREATE TABLE profile (id INT NOT NULL, of_user_id INT NOT NULL, username VARCHAR(255) DEFAULT NULL, name VARCHAR(255) DEFAULT NULL, lastname VARCHAR(255) DEFAULT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, PRIMARY KEY(id))');
         $this->addSql('CREATE UNIQUE INDEX UNIQ_8157AA0F5A1B2224 ON profile (of_user_id)');
         $this->addSql('COMMENT ON COLUMN profile.created_at IS \'(DC2Type:datetime_immutable)\'');
-        $this->addSql('CREATE TABLE relation (id INT NOT NULL, relation_as_sender_id INT NOT NULL, relation_as_recipient_id INT NOT NULL, PRIMARY KEY(id))');
-        $this->addSql('CREATE INDEX IDX_62894749AD6D0CE ON relation (relation_as_sender_id)');
-        $this->addSql('CREATE INDEX IDX_628947499AB6B439 ON relation (relation_as_recipient_id)');
+        $this->addSql('CREATE TABLE relation (id INT NOT NULL, sender_id INT NOT NULL, recipient_id INT NOT NULL, PRIMARY KEY(id))');
+        $this->addSql('CREATE INDEX IDX_62894749F624B39D ON relation (sender_id)');
+        $this->addSql('CREATE INDEX IDX_62894749E92F8F78 ON relation (recipient_id)');
         $this->addSql('CREATE TABLE "user" (id INT NOT NULL, email VARCHAR(180) NOT NULL, roles JSON NOT NULL, password VARCHAR(255) NOT NULL, PRIMARY KEY(id))');
         $this->addSql('CREATE UNIQUE INDEX UNIQ_8D93D649E7927C74 ON "user" (email)');
         $this->addSql('CREATE TABLE messenger_messages (id BIGSERIAL NOT NULL, body TEXT NOT NULL, headers TEXT NOT NULL, queue_name VARCHAR(190) NOT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, available_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, delivered_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, PRIMARY KEY(id))');
@@ -52,9 +59,12 @@ final class Version20231108154749 extends AbstractMigration
         $this->addSql('CREATE TRIGGER notify_trigger AFTER INSERT OR UPDATE ON messenger_messages FOR EACH ROW EXECUTE PROCEDURE notify_messenger_messages();');
         $this->addSql('ALTER TABLE friend_request ADD CONSTRAINT FK_F284D94A45BB98C FOREIGN KEY (sent_by_id) REFERENCES profile (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE friend_request ADD CONSTRAINT FK_F284D946F8DDD17 FOREIGN KEY (received_by_id) REFERENCES profile (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
+        $this->addSql('ALTER TABLE private_conversation ADD CONSTRAINT FK_DCF38EEB855AA6A FOREIGN KEY (conv_creator_id) REFERENCES profile (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
+        $this->addSql('ALTER TABLE private_conversation ADD CONSTRAINT FK_DCF38EEB5FDB19BC FOREIGN KEY (conv_recipient_id) REFERENCES profile (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
+        $this->addSql('ALTER TABLE private_message ADD CONSTRAINT FK_4744FC9B4242ECCE FOREIGN KEY (private_conversation_id) REFERENCES private_conversation (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE profile ADD CONSTRAINT FK_8157AA0F5A1B2224 FOREIGN KEY (of_user_id) REFERENCES "user" (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
-        $this->addSql('ALTER TABLE relation ADD CONSTRAINT FK_62894749AD6D0CE FOREIGN KEY (relation_as_sender_id) REFERENCES profile (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
-        $this->addSql('ALTER TABLE relation ADD CONSTRAINT FK_628947499AB6B439 FOREIGN KEY (relation_as_recipient_id) REFERENCES profile (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
+        $this->addSql('ALTER TABLE relation ADD CONSTRAINT FK_62894749F624B39D FOREIGN KEY (sender_id) REFERENCES profile (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
+        $this->addSql('ALTER TABLE relation ADD CONSTRAINT FK_62894749E92F8F78 FOREIGN KEY (recipient_id) REFERENCES profile (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
     }
 
     public function down(Schema $schema): void
@@ -63,16 +73,23 @@ final class Version20231108154749 extends AbstractMigration
         $this->addSql('CREATE SCHEMA public');
         $this->addSql('DROP SEQUENCE friend_request_id_seq CASCADE');
         $this->addSql('DROP SEQUENCE private_chat_id_seq CASCADE');
+        $this->addSql('DROP SEQUENCE private_conversation_id_seq CASCADE');
+        $this->addSql('DROP SEQUENCE private_message_id_seq CASCADE');
         $this->addSql('DROP SEQUENCE profile_id_seq CASCADE');
         $this->addSql('DROP SEQUENCE relation_id_seq CASCADE');
         $this->addSql('DROP SEQUENCE "user_id_seq" CASCADE');
         $this->addSql('ALTER TABLE friend_request DROP CONSTRAINT FK_F284D94A45BB98C');
         $this->addSql('ALTER TABLE friend_request DROP CONSTRAINT FK_F284D946F8DDD17');
+        $this->addSql('ALTER TABLE private_conversation DROP CONSTRAINT FK_DCF38EEB855AA6A');
+        $this->addSql('ALTER TABLE private_conversation DROP CONSTRAINT FK_DCF38EEB5FDB19BC');
+        $this->addSql('ALTER TABLE private_message DROP CONSTRAINT FK_4744FC9B4242ECCE');
         $this->addSql('ALTER TABLE profile DROP CONSTRAINT FK_8157AA0F5A1B2224');
-        $this->addSql('ALTER TABLE relation DROP CONSTRAINT FK_62894749AD6D0CE');
-        $this->addSql('ALTER TABLE relation DROP CONSTRAINT FK_628947499AB6B439');
+        $this->addSql('ALTER TABLE relation DROP CONSTRAINT FK_62894749F624B39D');
+        $this->addSql('ALTER TABLE relation DROP CONSTRAINT FK_62894749E92F8F78');
         $this->addSql('DROP TABLE friend_request');
         $this->addSql('DROP TABLE private_chat');
+        $this->addSql('DROP TABLE private_conversation');
+        $this->addSql('DROP TABLE private_message');
         $this->addSql('DROP TABLE profile');
         $this->addSql('DROP TABLE relation');
         $this->addSql('DROP TABLE "user"');

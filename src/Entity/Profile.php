@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 #[ORM\Entity(repositoryClass: ProfileRepository::class)]
 class Profile
@@ -15,19 +16,18 @@ class Profile
     #[ORM\GeneratedValue]
     #[ORM\Column]
     #[Groups(['request:read', 'relation:read'])]
-
     private ?int $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['user:read', 'request:read', 'relation:read'])]
+    #[Groups(['user:read', 'request:read', 'relation:read', 'conv:read', 'message:read'])]
     private ?string $username = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['user:read'])]
+    #[Groups(['user:read', 'conv:read', 'message:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['user:read'])]
+    #[Groups(['user:read', 'conv:read', 'message:read'])]
     private ?string $lastname = null;
 
     #[ORM\OneToOne(inversedBy: 'profile', cascade: ['persist', 'remove'])]
@@ -35,36 +35,46 @@ class Profile
     private ?User $ofUser = null;
 
     #[ORM\Column]
+    #[Groups('conv:read')]
     private ?\DateTimeImmutable $createdAt = null;
 
-    #[ORM\OneToMany(mappedBy: 'relationAsSender', targetEntity: Relation::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'sender', targetEntity: Relation::class, orphanRemoval: true)]
     private Collection $relationAsSender;
 
-    #[ORM\OneToMany(mappedBy: 'relationAsRecipient', targetEntity: Relation::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'recipient', targetEntity: Relation::class, orphanRemoval: true)]
     private Collection $relationAsRecipient;
+
+    #[ORM\OneToMany(mappedBy: 'convCreator', targetEntity: PrivateConversation::class, orphanRemoval: true)]
+    private Collection $createdPrivateConversations;
+
+    #[ORM\OneToMany(mappedBy: 'convRecipient', targetEntity: PrivateConversation::class, orphanRemoval: true)]
+    private Collection $receivedPrivateConversation;
+
+    #[ORM\OneToMany(mappedBy: 'sender', targetEntity: PrivateMessage::class, orphanRemoval: true)]
+    private Collection $privateMessages;
 
 public function getFriendsList()
 {
     $list = [];
     foreach ($this->relationAsSender as $relation){
 
-        if($relation->getRelationAsSender() != $this)
+        if($relation->getSender() != $this)
         {
-            $otherProfile = $relation->getRelationAsSender();
+            $otherProfile = $relation->getSender();
 
         }else{
-            $otherProfile = $relation->getRelationAsRecipient();
+            $otherProfile = $relation->getRecipient();
         }
         $list[]=$otherProfile;
     }
     foreach ($this->relationAsRecipient as $relation){
 
-        if($relation->getRelationAsSender() != $this)
+        if($relation->getSender() != $this)
         {
-            $otherProfile = $relation->getRelationAsSender();
+            $otherProfile = $relation->getSender();
 
         }else{
-            $otherProfile = $relation->getRelationAsRecipient();
+            $otherProfile = $relation->getRecipient();
         }
         $list[]=$otherProfile;
     }
@@ -72,10 +82,26 @@ public function getFriendsList()
 return $list;
 }
 
+public function isMyFriend($user){
+    foreach ($this->relationAsSender as $relation){
+        if ($relation->getRecipient()==$user){
+            return true;
+        }
+    }
+    foreach ($this->relationAsRecipient as $relation){
+        if ($relation->getSender()==$user){
+            return true;
+        }
+    }
+    return false;
+}
     public function __construct()
     {
         $this->relationAsSender = new ArrayCollection();
         $this->relationAsRecipient = new ArrayCollection();
+        $this->createdPrivateConversations = new ArrayCollection();
+        $this->receivedPrivateConversation = new ArrayCollection();
+        $this->privateMessages = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -155,7 +181,7 @@ return $list;
     {
         if (!$this->relationAsSender->contains($friend)) {
             $this->relationAsSender->add($friend);
-            $friend->setRelationAsSender($this);
+            $friend->setSender($this);
         }
 
         return $this;
@@ -165,8 +191,8 @@ return $list;
     {
         if ($this->relationAsSender->removeElement($friend)) {
             // set the owning side to null (unless already changed)
-            if ($friend->getRelationAsSender() === $this) {
-                $friend->setRelationAsSender(null);
+            if ($friend->getSender() === $this) {
+                $friend->setSender(null);
             }
         }
 
@@ -176,7 +202,7 @@ return $list;
     /**
      * @return Collection<int, Relation>
      */
-    public function getRelationAsRecipient(): Collection
+    public function getRecipient(): Collection
     {
         return $this->relationAsRecipient;
     }
@@ -185,7 +211,7 @@ return $list;
     {
         if (!$this->relationAsRecipient->contains($relationAsRecipient)) {
             $this->relationAsRecipient->add($relationAsRecipient);
-            $relationAsRecipient->setRelationAsRecipient($this);
+            $relationAsRecipient->setRecipient($this);
         }
 
         return $this;
@@ -195,8 +221,98 @@ return $list;
     {
         if ($this->relationAsRecipient->removeElement($relationAsRecipient)) {
             // set the owning side to null (unless already changed)
-            if ($relationAsRecipient->getRelationAsRecipient() === $this) {
-                $relationAsRecipient->setRelationAsRecipient(null);
+            if ($relationAsRecipient->getRecipient() === $this) {
+                $relationAsRecipient->setRecipient(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PrivateConversation>
+     */
+    public function getCreatedPrivateConversations(): Collection
+    {
+        return $this->createdPrivateConversations;
+    }
+
+    public function addCreatedPrivateConversation(PrivateConversation $createdPrivateConversation): static
+    {
+        if (!$this->createdPrivateConversations->contains($createdPrivateConversation)) {
+            $this->createdPrivateConversations->add($createdPrivateConversation);
+            $createdPrivateConversation->setConvCreator($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCreatedPrivateConversation(PrivateConversation $createdPrivateConversation): static
+    {
+        if ($this->createdPrivateConversations->removeElement($createdPrivateConversation)) {
+            // set the owning side to null (unless already changed)
+            if ($createdPrivateConversation->getConvCreator() === $this) {
+                $createdPrivateConversation->setConvCreator(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PrivateConversation>
+     */
+    public function getReceivedPrivateConversation(): Collection
+    {
+        return $this->receivedPrivateConversation;
+    }
+
+    public function addReceivedPrivateConversation(PrivateConversation $receivedPrivateConversation): static
+    {
+        if (!$this->receivedPrivateConversation->contains($receivedPrivateConversation)) {
+            $this->receivedPrivateConversation->add($receivedPrivateConversation);
+            $receivedPrivateConversation->setConvRecipient($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReceivedPrivateConversation(PrivateConversation $receivedPrivateConversation): static
+    {
+        if ($this->receivedPrivateConversation->removeElement($receivedPrivateConversation)) {
+            // set the owning side to null (unless already changed)
+            if ($receivedPrivateConversation->getConvRecipient() === $this) {
+                $receivedPrivateConversation->setConvRecipient(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PrivateMessage>
+     */
+    public function getPrivateMessages(): Collection
+    {
+        return $this->privateMessages;
+    }
+
+    public function addPrivateMessage(PrivateMessage $privateMessage): static
+    {
+        if (!$this->privateMessages->contains($privateMessage)) {
+            $this->privateMessages->add($privateMessage);
+            $privateMessage->setSender($this);
+        }
+
+        return $this;
+    }
+
+    public function removePrivateMessage(PrivateMessage $privateMessage): static
+    {
+        if ($this->privateMessages->removeElement($privateMessage)) {
+            // set the owning side to null (unless already changed)
+            if ($privateMessage->getSender() === $this) {
+                $privateMessage->setSender(null);
             }
         }
 

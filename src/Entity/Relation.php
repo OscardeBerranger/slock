@@ -15,43 +15,43 @@ class Relation
     #[Groups('relation:read')]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'relationAsSender')]
+    #[ORM\ManyToOne(inversedBy: 'asSender')]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups('relation:read')]
 
-    private ?Profile $relationAsSender = null;
+    private ?Profile $sender = null;
 
-    #[ORM\ManyToOne(inversedBy: 'relationAsRecipient')]
+    #[ORM\ManyToOne(inversedBy: 'asRecipient')]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups('relation:read')]
 
-    private ?Profile $relationAsRecipient = null;
+    private ?Profile $recipient = null;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getRelationAsSender(): ?Profile
+    public function getSender(): ?Profile
     {
-        return $this->relationAsSender;
+        return $this->sender;
     }
 
-    public function setRelationAsSender(?Profile $relationAsSender): static
+    public function setSender(?Profile $sender): static
     {
-        $this->relationAsSender = $relationAsSender;
+        $this->sender = $sender;
 
         return $this;
     }
 
-    public function getRelationAsRecipient(): ?Profile
+    public function getRecipient(): ?Profile
     {
-        return $this->relationAsRecipient;
+        return $this->recipient;
     }
 
-    public function setRelationAsRecipient(?Profile $relationAsRecipient): static
+    public function setRecipient(?Profile $recipient): static
     {
-        $this->relationAsRecipient = $relationAsRecipient;
+        $this->recipient = $recipient;
 
         return $this;
     }
