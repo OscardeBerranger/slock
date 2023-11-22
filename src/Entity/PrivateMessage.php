@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\PrivateMessageRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
@@ -32,6 +34,19 @@ class PrivateMessage
     #[ORM\Column]
     #[Groups("message:read")]
     private ?\DateTimeImmutable $createdAt = null;
+
+    #[ORM\OneToMany(mappedBy: 'privateMessage', targetEntity: Image::class)]
+    private Collection $images;
+
+    #[Groups("message:read")]
+    private ArrayCollection $imagesUrls;
+
+    private array $associatedImages;
+
+    public function __construct()
+    {
+        $this->images = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -85,4 +100,55 @@ class PrivateMessage
 
         return $this;
     }
+
+    /**
+     * @return Collection<int, Image>
+     */
+    public function getImages(): Collection
+    {
+        return $this->images;
+    }
+
+    public function addImage(Image $image): static
+    {
+        if (!$this->images->contains($image)) {
+            $this->images->add($image);
+            $image->setPrivateMessage($this);
+        }
+
+        return $this;
+    }
+
+    public function removeImage(Image $image): static
+    {
+        if ($this->images->removeElement($image)) {
+            // set the owning side to null (unless already changed)
+            if ($image->getPrivateMessage() === $this) {
+                $image->setPrivateMessage(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getAssociatedImages(): array
+    {
+        return $this->associatedImages;
+    }
+
+    public function setAssociatedImages(array $associatedImages): void
+    {
+        $this->associatedImages = $associatedImages;
+    }
+
+    public function getImagesUrls(): ArrayCollection
+    {
+        return $this->imagesUrls;
+    }
+
+    public function setImagesUrls(ArrayCollection $imagesUrls): void
+    {
+        $this->imagesUrls = $imagesUrls;
+    }
+
 }

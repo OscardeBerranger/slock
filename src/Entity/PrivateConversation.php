@@ -14,6 +14,7 @@ class PrivateConversation
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['conv:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'createdPrivateConversations')]

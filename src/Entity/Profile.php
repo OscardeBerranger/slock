@@ -15,19 +15,19 @@ class Profile
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['request:read', 'relation:read'])]
+    #[Groups(['request:read', 'relation:read', 'groupmessage:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['user:read', 'request:read', 'relation:read', 'conv:read', 'message:read'])]
+    #[Groups(['user:read', 'request:read', 'relation:read', 'conv:read', 'message:read', 'groupmessage:read'])]
     private ?string $username = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['user:read', 'conv:read', 'message:read'])]
+    #[Groups(['user:read', 'conv:read', 'message:read', 'groupmessage:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['user:read', 'conv:read', 'message:read'])]
+    #[Groups(['user:read', 'conv:read', 'message:read', 'groupmessage:read'])]
     private ?string $lastname = null;
 
     #[ORM\OneToOne(inversedBy: 'profile', cascade: ['persist', 'remove'])]
@@ -52,6 +52,15 @@ class Profile
 
     #[ORM\OneToMany(mappedBy: 'sender', targetEntity: PrivateMessage::class, orphanRemoval: true)]
     private Collection $privateMessages;
+
+    #[ORM\ManyToMany(targetEntity: GroupConversation::class, mappedBy: 'convCreator')]
+    private Collection $adminGroupConversation;
+
+    #[ORM\ManyToMany(targetEntity: GroupConversation::class, mappedBy: 'convRecipient')]
+    private Collection $recipientGroupConversation;
+
+    #[ORM\OneToMany(mappedBy: 'author', targetEntity: GroupeMessage::class)]
+    private Collection $groupeMessages;
 
 public function getFriendsList()
 {
@@ -102,6 +111,9 @@ public function isMyFriend($user){
         $this->createdPrivateConversations = new ArrayCollection();
         $this->receivedPrivateConversation = new ArrayCollection();
         $this->privateMessages = new ArrayCollection();
+        $this->adminGroupConversation = new ArrayCollection();
+        $this->recipientGroupConversation = new ArrayCollection();
+        $this->groupeMessages = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -313,6 +325,90 @@ public function isMyFriend($user){
             // set the owning side to null (unless already changed)
             if ($privateMessage->getSender() === $this) {
                 $privateMessage->setSender(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, GroupConversation>
+     */
+    public function getAdminGroupConversation(): Collection
+    {
+        return $this->adminGroupConversation;
+    }
+
+    public function addAdminGroupConversation(GroupConversation $adminGroupConversation): static
+    {
+        if (!$this->adminGroupConversation->contains($adminGroupConversation)) {
+            $this->adminGroupConversation->add($adminGroupConversation);
+            $adminGroupConversation->addConvCreator($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAdminGroupConversation(GroupConversation $adminGroupConversation): static
+    {
+        if ($this->adminGroupConversation->removeElement($adminGroupConversation)) {
+            $adminGroupConversation->removeConvCreator($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, GroupConversation>
+     */
+    public function getRecipientGroupConversation(): Collection
+    {
+        return $this->recipientGroupConversation;
+    }
+
+    public function addRecipientGroupConversation(GroupConversation $recipientGroupConversation): static
+    {
+        if (!$this->recipientGroupConversation->contains($recipientGroupConversation)) {
+            $this->recipientGroupConversation->add($recipientGroupConversation);
+            $recipientGroupConversation->addConvRecipient($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRecipientGroupConversation(GroupConversation $recipientGroupConversation): static
+    {
+        if ($this->recipientGroupConversation->removeElement($recipientGroupConversation)) {
+            $recipientGroupConversation->removeConvRecipient($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, GroupeMessage>
+     */
+    public function getGroupeMessages(): Collection
+    {
+        return $this->groupeMessages;
+    }
+
+    public function addGroupeMessage(GroupeMessage $groupeMessage): static
+    {
+        if (!$this->groupeMessages->contains($groupeMessage)) {
+            $this->groupeMessages->add($groupeMessage);
+            $groupeMessage->setAuthor($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGroupeMessage(GroupeMessage $groupeMessage): static
+    {
+        if ($this->groupeMessages->removeElement($groupeMessage)) {
+            // set the owning side to null (unless already changed)
+            if ($groupeMessage->getAuthor() === $this) {
+                $groupeMessage->setAuthor(null);
             }
         }
 

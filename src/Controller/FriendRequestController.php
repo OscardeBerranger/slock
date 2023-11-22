@@ -16,15 +16,6 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 class FriendRequestController extends AbstractController
 {
-    #[Route('/friend', name: 'app_friend')]
-    public function index(): Response
-    {
-        return $this->render('friend/index.html.twig', [
-            'controller_name' => 'FriendRequestController',
-        ]);
-    }
-
-
     #[Route('/api/sendfriendrequest/{id}', name: 'send_friend_request')]
     public function send($id, ProfileRepository $repository ,Request $request, SerializerInterface $serializer, EntityManagerInterface $manager, FriendRequestRepository $friendRequestRepository){
         $sender = $this->getUser()->getProfile();
