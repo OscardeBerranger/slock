@@ -22,10 +22,10 @@ class PrivateConversationController extends AbstractController
 
     #[Route('/get/{id}', name: 'get_private_messages', methods: 'GET')]
     public function get(PrivateConversation $conversation, ImagesProcessor $processor){
-
-        return $this->json($processor->setImagesUrlsOfMessagesFromPrivateMessage($conversation), 200, [], ["groups"=>"message:read"]);
+        return $this->json($processor->setImagesUrlsOfMessagesFromPrivateConversation($conversation), 200, [], ["groups"=>"message:read"]);
     }
-    #[Route('/create/{id}', name: 'private_converstation_create')]
+
+    #[Route('/create/{id}', name: 'private_converstation_create', methods: 'POST')]
     public function create($id, ProfileRepository $profileRepository, EntityManagerInterface $manager){
         $u1 = $this->getUser()->getProfile();
         $u2 = $profileRepository->find($id);

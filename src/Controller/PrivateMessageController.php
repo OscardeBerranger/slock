@@ -24,7 +24,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 class PrivateMessageController extends AbstractController
 {
 
-    #[Route('/create/{id}', name: 'private_message_create')]
+    #[Route('/create/{id}', name: 'private_message_create', methods: 'POST')]
     public function create($id, PrivateConversationRepository $repository, Request $request, SerializerInterface $serializer, EntityManagerInterface $manager, ImagesProcessor $processor){
         $privateConversation = $repository->find($id);
         $author = $this->getUser()->getProfile();
@@ -42,7 +42,7 @@ class PrivateMessageController extends AbstractController
         $manager->persist($message);
         $manager->flush();
 
-        return $this->json("Message enregistré", 201);
+        return $this->json($message, 201);
     }
 
 
@@ -61,18 +61,4 @@ class PrivateMessageController extends AbstractController
         return $this->json('An error has occured', 400);
     }
 
-
-
-
-    #[Route('/addimage/{idMessage}/{idImage}', name: 'add_image_to_private_message', methods: 'POST')]
-    public function addImage(EntityManagerInterface $manager,
-             #[MapEntity(mapping: ['idMessage'=>'id'])]PrivateMessage $message,
-             #[MapEntity(mapping: ['idImage'=>'id'])]Image $image,
-    ){
-        dd($image);
-        $message->addImage($image);
-        $manager->persist($message);
-        $manager->flush();
-        return $this->json("The image has been added to your message", 201);
-    }
 }

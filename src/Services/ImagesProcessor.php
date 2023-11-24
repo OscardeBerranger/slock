@@ -34,18 +34,21 @@ class ImagesProcessor
     }
 
 
-    public function setImagesUrlsOfMessagesFromPrivateMessage(PrivateConversation $conversation){
+    public function setImagesUrlsOfMessagesFromPrivateConversation(PrivateConversation $conversation){
         $messages = $conversation->getMessages();
         foreach ($messages as $message){
             $images = $message->getImages();
+
             $imagesUrls = new ArrayCollection();
             foreach ($images as $image){
                 $imageUrl = [];
                 $imageUrl["id"] = $image->getId();
                 $imageUrl["url"] = $this->cacheManager->generateUrl($this->uploaderHelper->asset($image), 'vignette');
                 $imagesUrls[] = $imageUrl;
+
             }
             $message->setImagesUrls($imagesUrls);
+
         }
         return $messages;
     }
