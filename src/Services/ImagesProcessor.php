@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Entity\GroupConversation;
 use App\Entity\PrivateConversation;
 use App\Repository\ImageRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -34,9 +35,8 @@ class ImagesProcessor
     }
 
 
-    public function setImagesUrlsOfMessagesFromPrivateConversation(PrivateConversation $conversation){
-        $messages = $conversation->getMessages();
-        foreach ($messages as $message){
+    private function plzForeachForMe($data){
+        foreach ($data as $message){
             $images = $message->getImages();
 
             $imagesUrls = new ArrayCollection();
@@ -45,11 +45,19 @@ class ImagesProcessor
                 $imageUrl["id"] = $image->getId();
                 $imageUrl["url"] = $this->cacheManager->generateUrl($this->uploaderHelper->asset($image), 'vignette');
                 $imagesUrls[] = $imageUrl;
-
             }
             $message->setImagesUrls($imagesUrls);
-
         }
-        return $messages;
+        return $data;
+    }
+
+
+    public function setImagesUrlsOfMessagesFromPrivateConversation(PrivateConversation $conversation){
+        return $this->plzForeachForMe($conversation->getMessages());
+    }
+
+    public function setImagesUrlsOfMessagesFromGroupConversation(GroupConversation $conversation): \Doctrine\Common\Collections\Collection
+    {
+        return $this->plzForeachForMe($conversation->getGroupeMessages());
     }
 }

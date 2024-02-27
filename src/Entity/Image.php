@@ -43,6 +43,9 @@ class Image
     #[ORM\ManyToOne(inversedBy: 'images')]
     private ?PrivateMessage $privateMessage = null;
 
+    #[ORM\ManyToOne(inversedBy: 'images')]
+    private ?GroupeMessage $groupeMessage = null;
+
 
 
 
@@ -102,6 +105,18 @@ class Image
     public function setPrivateMessage(?PrivateMessage $privateMessage): static
     {
         $this->privateMessage = $privateMessage;
+
+        return $this;
+    }
+
+    public function getGroupeMessage(): ?GroupeMessage
+    {
+        return $this->groupeMessage;
+    }
+
+    public function setGroupeMessage(?GroupeMessage $groupeMessage): static
+    {
+        $this->groupeMessage = $groupeMessage;
 
         return $this;
     }

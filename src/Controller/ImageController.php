@@ -20,6 +20,6 @@ class ImageController extends AbstractController
         $image->setImageFile($file);
         $manager->persist($image);
         $manager->flush();
-        return $this->json("ID de l'image : ".$image->getId(), 201);
+        return $this->json($image->getId(), 201);
     }
 }

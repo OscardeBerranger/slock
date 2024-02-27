@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\GroupeMessageRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
@@ -30,6 +32,19 @@ class GroupeMessage
     #[Groups("groupmessage:read")]
     #[ORM\ManyToOne(inversedBy: 'groupeMessages')]
     private ?Profile $author = null;
+
+    #[ORM\OneToMany(mappedBy: 'groupeMessage', targetEntity: Image::class)]
+    private Collection $images;
+
+    #[Groups("groupmessage:read")]
+    private ArrayCollection $imagesUrls;
+
+    private array $associatedImages;
+
+    public function __construct()
+    {
+        $this->images = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -82,5 +97,55 @@ class GroupeMessage
         $this->author = $author;
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, Image>
+     */
+    public function getImages(): Collection
+    {
+        return $this->images;
+    }
+
+    public function addImage(Image $image): static
+    {
+        if (!$this->images->contains($image)) {
+            $this->images->add($image);
+            $image->setGroupeMessage($this);
+        }
+
+        return $this;
+    }
+
+    public function removeImage(Image $image): static
+    {
+        if ($this->images->removeElement($image)) {
+            // set the owning side to null (unless already changed)
+            if ($image->getGroupeMessage() === $this) {
+                $image->setGroupeMessage(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getImagesUrls(): ArrayCollection
+    {
+        return $this->imagesUrls;
+    }
+
+    public function setImagesUrls(ArrayCollection $imagesUrls): void
+    {
+        $this->imagesUrls = $imagesUrls;
+    }
+
+    public function getAssociatedImages(): array
+    {
+        return $this->associatedImages;
+    }
+
+    public function setAssociatedImages(array $associatedImages): void
+    {
+        $this->associatedImages = $associatedImages;
     }
 }

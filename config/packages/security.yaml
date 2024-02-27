@@ -18,7 +18,6 @@ security:
             pattern: ^/api/login
             stateless: true
             json_login:
-                username_path: email
                 check_path: /api/login_check
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
@@ -27,20 +26,11 @@ security:
             pattern: ^/api
             stateless: true
             jwt: ~
+
         main:
             lazy: true
             provider: app_user_provider
-            custom_authenticator: App\Security\Authenticator
-            logout:
-                path: app_logout
-                # where to redirect after logout
-                # target: app_any_route
 
-            remember_me:
-                secret: '%kernel.secret%'
-                lifetime: 604800
-                path: /
-                always_remember_me: true
 
 
             # activate different ways to authenticate

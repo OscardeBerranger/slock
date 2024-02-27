@@ -19,7 +19,6 @@ class PrivateMessage
 
     #[ORM\ManyToOne(inversedBy: 'messages')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups("message:read")]
     private ?PrivateConversation $privateConversation = null;
 
     #[ORM\ManyToOne(inversedBy: 'privateMessages')]

@@ -20,7 +20,7 @@ class GroupeConversationController extends AbstractController
         $groupConversation->addConvCreator($this->getUser()->getProfile());
         $manager->persist($groupConversation);
         $manager->flush();
-        return $this->json("ok", 201);
+        return $this->json($groupConversation->getId(), 201);
     }
 
     #[Route('/api/addtogroup/{profileId}/{groupId}', name: 'group_converstation_add', methods: 'POST')]
