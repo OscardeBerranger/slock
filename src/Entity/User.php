@@ -33,7 +33,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
-    #[Groups(['user:read'])]
     private ?string $password = null;
 
     #[ORM\OneToOne(mappedBy: 'ofUser', cascade: ['persist', 'remove'])]
