@@ -29,6 +29,9 @@ class RegistrationController extends AbstractController
                 )
             );
             $profile = new Profile();
+            $profile->setUsername(strtok($user->getProfile(), "@"));
+            $profile->setName("No name for now");
+            $profile->setLastname("No name for now");
             $user->setProfile($profile);
             $currentDate = new \DateTimeImmutable();
             $profile->setCreatedAt($currentDate);
