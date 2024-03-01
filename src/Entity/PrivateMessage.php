@@ -14,7 +14,7 @@ class PrivateMessage
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups('conv:read')]
+    #[Groups('conv:read', 'message:read')]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'messages')]

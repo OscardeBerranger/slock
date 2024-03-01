@@ -26,6 +26,11 @@ class PrivateMessageController extends AbstractController
 
     #[Route('/create/{id}', name: 'private_message_create', methods: 'POST')]
     public function create($id, PrivateConversationRepository $repository, Request $request, SerializerInterface $serializer, EntityManagerInterface $manager, ImagesProcessor $processor){
+
+
+
+
+
         $privateConversation = $repository->find($id);
         $author = $this->getUser()->getProfile();
         $message = $serializer->deserialize($request->getContent(), PrivateMessage::class, 'json');
@@ -33,18 +38,28 @@ class PrivateMessageController extends AbstractController
         $message->setPrivateConversation($privateConversation);
         $message->setCreatedAt(new \DateTimeImmutable());
 
-        $associatedImages = $message->getAssociatedImages();
-        if ($associatedImages){
-            foreach($processor->getImagesFromImageIds($associatedImages) as $image){
-                $message->addImage($image);
-            }
-        }
+//        $associatedImages = $message->getAssociatedImages();
+//        if ($associatedImages){
+//            foreach($processor->getImagesFromImageIds($associatedImages) as $image){
+//                $message->addImage($image);
+//            }
+//        }
         $manager->persist($message);
         $manager->flush();
 
-        return $this->json($message, 201);
+        return $this->json($message, 201, [], ["groups"=>"message:read"]);
     }
 
+    #[Route('/edit/{id}', name: 'private_message_edit', methods: 'POST')]
+    public function edit(PrivateMessage $message, SerializerInterface $serializer, Request $request, EntityManagerInterface $manager){
+        if (!$message){
+            return $this->json("message not found", "401");
+        }
+        $message->setContent($serializer->deserialize($request->getContent(), PrivateMessage::class, 'json')->getContent());
+        $manager->persist($message);
+        $manager->flush();
+        return $this->json($message, 201, [], ["groups"=>"message:read"]);
+    }
 
     #[Route('/delete/{idMessage}', name: 'private_message_delete', methods: 'DELETE')]
     public function delete($idMessage, ProfileRepository $profileRepository, PrivateMessageRepository $privateMessageRepository, EntityManagerInterface$manager){

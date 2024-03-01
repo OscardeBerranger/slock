@@ -40,6 +40,12 @@ class FriendRequestController extends AbstractController
     }
 
 
+    #[Route('/api/getmyfriendrequest', name:'get_my_friend_request')]
+    public function getMyFriendRequest(FriendRequestRepository $repository){
+        $requests = $repository->findBy(["receivedBy"=>$this->getUser()->getProfile()]);
+        return $this->json($requests, 200, [], ["groups"=>"request:read"]);
+    }
+
     #[Route('/api/acceptFriendRequest/{id}', name:'accept_friend_request')]
     public function accept($id,FriendRequestRepository $repository, EntityManagerInterface $manager)
     {
