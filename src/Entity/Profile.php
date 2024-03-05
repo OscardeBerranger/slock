@@ -19,7 +19,7 @@ class Profile
     private ?int $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['user:read', 'request:read', 'relation:read', 'conv:read', 'message:read', 'groupmessage:read'])]
+    #[Groups(['user:read', 'request:read', 'relation:read', 'conv:read', 'message:read', 'groupmessage:read', 'request:read'])]
     private ?string $username = null;
 
     #[ORM\Column(length: 255, nullable: true)]

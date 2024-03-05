@@ -37,5 +37,18 @@ class PrivateConversationController extends AbstractController
         return $this->json($conv, 200, [], ["groups"=>"conv:read"]);
     }
 
+    #[Route('/getmyconvs', name: 'private_converstation_create', methods: 'POST')]
+    public function getMyConvs(PrivateConversationRepository $repository){
+        $final = [];
+        $tmp = $repository->findBy(["convCreator"=>$this->getUser()]);
+        $tmp1 = $repository->findBy(["convRecipient"=>$this->getUser()]);
+        foreach ($tmp as $item){
+            $final[]=$item;
+        }
+        foreach ($tmp1 as $item){
+            $final[]=$item;
+        }
+        return $this->json($final, 200, [], ["groups"=>"conv:read"]);
+    }
 
 }

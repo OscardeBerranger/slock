@@ -12,6 +12,7 @@ class FriendRequest
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['request:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne]

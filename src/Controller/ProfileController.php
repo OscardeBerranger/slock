@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Profile;
 use App\Repository\ProfileRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,6 +20,15 @@ class ProfileController extends AbstractController
 
     #[Route('/getpeople', name: 'app_profile_get_people')]
     public function getPeople(ProfileRepository $repository){
+        $returnable = [];
+
         return $this->json($repository->findAll(), 200, [], ["groups"=>"user:read"]);
+    }
+
+
+    #[Route('/whoishe/{id}', name:'who_is_he')]
+    public function whoIsHe(Profile $profile)
+    {
+        return $this->json($profile, 200, [], ["groups"=>"user:read"]);
     }
 }
