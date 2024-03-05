@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\PrivateConversation;
 use App\Entity\PrivateMessage;
+use App\Entity\Profile;
 use App\Repository\PrivateConversationRepository;
 use App\Repository\ProfileRepository;
 use App\Services\ImagesProcessor;
@@ -37,7 +38,7 @@ class PrivateConversationController extends AbstractController
         return $this->json($conv, 200, [], ["groups"=>"conv:read"]);
     }
 
-    #[Route('/getmyconvs', name: 'private_converstation_create', methods: 'POST')]
+    #[Route('/getmyconvs', name: 'private_conversation_get_my_conv', methods: 'GET')]
     public function getMyConvs(PrivateConversationRepository $repository){
         $final = [];
         $tmp = $repository->findBy(["convCreator"=>$this->getUser()]);
@@ -49,6 +50,29 @@ class PrivateConversationController extends AbstractController
             $final[]=$item;
         }
         return $this->json($final, 200, [], ["groups"=>"conv:read"]);
+    }
+
+
+
+    #[Route('/getspecificconv/{id}', name: 'private_conversation_get_specific_conv', methods: 'GET')]
+    public function getSpecificConv(Profile $profile, PrivateConversationRepository $repository){
+
+        $asCreator = $repository->findBy(["convCreator"=>$this->getUser()]);
+        $asRecipient = $repository->findBy(["convRecipient"=>$this->getUser()]);
+
+        $returnable = [];
+
+        foreach ($asCreator as $item){
+            if ($item->getConvRecipient() === $profile){
+                $returnable[]=$item;
+            }
+        }
+        foreach ($asRecipient as $item){
+            if ($item->getConvCreator() === $profile){
+                $returnable[]=$item;
+            }
+        }
+        return $this->json($returnable, 200, [], ["groups"=>"conv:read"]);
     }
 
 }
