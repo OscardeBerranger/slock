@@ -72,7 +72,12 @@ class PrivateConversationController extends AbstractController
                 $returnable[]=$item;
             }
         }
-        return $this->json($returnable, 200, [], ["groups"=>"conv:read"]);
+        return $this->json($returnable, 200, [], ["groups"=>"conv:read", "message:read"]);
+    }
+
+    #[Route('/getwithid/{id}', name: 'private_conversation_get_with_id', methods: 'GET')]
+    public function getConvWithId(PrivateConversation $conversation){
+        return $this->json($conversation, 200, [], ["groups"=>"conv:read", "message:read"]);
     }
 
 }

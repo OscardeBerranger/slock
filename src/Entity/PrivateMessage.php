@@ -23,11 +23,11 @@ class PrivateMessage
 
     #[ORM\ManyToOne(inversedBy: 'privateMessages')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups("message:read")]
+    #[Groups(["message:read, conv:read"])]
     private ?Profile $author = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups("message:read")]
+    #[Groups(["message:read", "conv:read"])]
     private ?string $content = null;
 
     #[ORM\Column]
