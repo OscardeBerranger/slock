@@ -17,9 +17,9 @@ use Symfony\Component\Serializer\SerializerInterface;
 class FriendRequestController extends AbstractController
 {
     #[Route('/api/sendfriendrequest/{id}', name: 'send_friend_request')]
-    public function send($id, ProfileRepository $repository ,Request $request, SerializerInterface $serializer, EntityManagerInterface $manager, FriendRequestRepository $friendRequestRepository){
+    public function send($id, ProfileRepository $profileRepository, Request $request, SerializerInterface $serializer, EntityManagerInterface $manager, FriendRequestRepository $friendRequestRepository){
         $sender = $this->getUser()->getProfile();
-        $recipient = $repository->find($id);
+        $recipient = $profileRepository->find($id);
         if (!$recipient){
             return $this->json('The user does not exist', 400);
         }
@@ -29,7 +29,13 @@ class FriendRequestController extends AbstractController
         if ($sender->isMyFriend($recipient)){
             return $this->json('You two are already friends', 400);
         }
-        if($recipient)
+        if ($friendRequestRepository->findBy(["receivedBy"=>$recipient])){
+            return $this->json("Friend request already sent .");
+        }
+        if ($friendRequestRepository->findBy(["sentBy"=>$sender])){
+            return $this->json("Friend request already sent .");
+        }
+
         $frequest = new FriendRequest();
         $frequest->setSentBy($sender);
         $frequest->setReceivedBy($recipient);
