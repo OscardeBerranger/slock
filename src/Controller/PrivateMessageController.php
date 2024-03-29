@@ -38,12 +38,12 @@ class PrivateMessageController extends AbstractController
         $message->setPrivateConversation($privateConversation);
         $message->setCreatedAt(new \DateTimeImmutable());
 
-//        $associatedImages = $message->getAssociatedImages();
-//        if ($associatedImages){
-//            foreach($processor->getImagesFromImageIds($associatedImages) as $image){
-//                $message->addImage($image);
-//            }
-//        }
+        $associatedImages = $message->getAssociatedImages();
+        if ($associatedImages){
+            foreach($processor->getImagesFromImageIds($associatedImages) as $image){
+                $message->addImage($image);
+            }
+        }
         $manager->persist($message);
         $manager->flush();
 

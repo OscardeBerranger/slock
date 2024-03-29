@@ -29,6 +29,7 @@ class FriendRequestController extends AbstractController
         if ($sender->isMyFriend($recipient)){
             return $this->json('You two are already friends', 400);
         }
+        if($recipient)
         $frequest = new FriendRequest();
         $frequest->setSentBy($sender);
         $frequest->setReceivedBy($recipient);

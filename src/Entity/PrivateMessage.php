@@ -14,7 +14,7 @@ class PrivateMessage
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups('conv:read', 'message:read')]
+    #[Groups(['conv:read', 'message:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'messages')]
@@ -23,7 +23,7 @@ class PrivateMessage
 
     #[ORM\ManyToOne(inversedBy: 'privateMessages')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(["message:read, conv:read"])]
+    #[Groups(["message:read", "conv:read"])]
     private ?Profile $author = null;
 
     #[ORM\Column(length: 255)]
